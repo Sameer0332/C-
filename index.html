@@ -1,24 +1,62 @@
-<!doctype html>
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>AI Voice</title>
-  <script src="https://cdn.jsdelivr.net/npm/retell-client-js-sdk@latest/dist/index.umd.js" defer></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Retell Web Call</title>
+  <!-- Retell SDK (UMD build) -->
+  <script src="https://cdn.jsdelivr.net/npm/retell-client-js-sdk@latest/dist/index.umd.js"></script>
 </head>
 <body>
-  <button id="mic">🎙️ Start</button>
+  <button id="start-call">🎤 Start AI Call</button>
+  <p id="status">Ready</p>
+
   <script>
-    const WEBHOOK_URL = "https://hook.eu2.make.com/1dy0qj9pyop9walnqq7jl25rutn6jd3l";
-    document.getElementById("mic").addEventListener("click", async () => {
+    const statusEl = document.getElementById("status");
+    const btn = document.getElementById("start-call");
+
+    btn.addEventListener("click", async () => {
+      statusEl.textContent = "Requesting token...";
+
       try {
-        await navigator.mediaDevices.getUserMedia({ audio: true });
-        const r = await fetch(WEBHOOK_URL, { method: "POST" });
-        const { access_token } = await r.json();
+        // Call your Make webhook to get access_token + call_id
+        const res = await fetch("https://hook.eu2.make.com/1dy0qj9pyop9walnqq7jl25rutn6jd3l", {
+          method: "POST"
+        });
+
+        const data = await res.json();
+
+        if (!data.access_token) {
+          statusEl.textContent = "No token received!";
+          return;
+        }
+
+        // Start Retell WebClient
         const client = new RetellWebClient();
-        client.on("error", e => alert("Retell error: " + (e?.message || e)));
-        await client.startCall({ accessToken: access_token });
-      } catch (e) { alert("Start error: " + (e?.message || e)); console.error(e); }
+
+        client.on("call_started", () => {
+          statusEl.textContent = "Call started!";
+        });
+
+        client.on("call_ended", () => {
+          statusEl.textContent = "Call ended!";
+        });
+
+        client.on("error", (err) => {
+          console.error(err);
+          statusEl.textContent = "Error: " + err.message;
+        });
+
+        await client.startCall({
+          accessToken: data.access_token,
+          sampleRate: 24000
+        });
+
+        statusEl.textContent = "Connecting...";
+      } catch (err) {
+        console.error("Start call failed:", err);
+        statusEl.textContent = "Start call failed!";
+      }
     });
   </script>
 </body>
