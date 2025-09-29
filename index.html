@@ -12,50 +12,59 @@
   <script type="module">
     import { RetellWebClient } from "https://cdn.jsdelivr.net/npm/retell-client-js-sdk@latest/dist/index.js";
 
-    const statusEl = document.getElementById("status");
-    const btn = document.getElementById("start-call");
+    document.addEventListener("DOMContentLoaded", () => {
+      const statusEl = document.getElementById("status");
+      const btn = document.getElementById("start-call");
 
-    btn.addEventListener("click", async () => {
-      statusEl.textContent = "Requesting token...";
+      console.log("Page loaded, binding button...");
 
-      try {
-        // Call your Make webhook to get access_token
-        const res = await fetch("https://hook.eu2.make.com/1dy0qj9pyop9walnqq7jl25rutn6jd3l", {
-          method: "POST"
-        });
-        const data = await res.json();
+      btn.addEventListener("click", async () => {
+        statusEl.textContent = "Requesting token...";
+        console.log("Button clicked, fetching token...");
 
-        if (!data.access_token) {
-          statusEl.textContent = "No token received!";
-          return;
+        try {
+          const res = await fetch("https://hook.eu2.make.com/1dy0qj9pyop9walnqq7jl25rutn6jd3l", {
+            method: "POST"
+          });
+
+          const data = await res.json();
+          console.log("Webhook response:", data);
+
+          if (!data.access_token) {
+            statusEl.textContent = "No token received!";
+            return;
+          }
+
+          const client = new RetellWebClient();
+          console.log("Retell client initialized:", client);
+
+          client.on("call_started", () => {
+            statusEl.textContent = "Call started!";
+            console.log("Call started event received");
+          });
+
+          client.on("call_ended", () => {
+            statusEl.textContent = "Call ended!";
+            console.log("Call ended event received");
+          });
+
+          client.on("error", (err) => {
+            console.error("SDK error:", err);
+            statusEl.textContent = "Error: " + err.message;
+          });
+
+          await client.startCall({
+            accessToken: data.access_token,
+            sampleRate: 24000
+          });
+
+          statusEl.textContent = "Connecting...";
+          console.log("Calling startCall with token...");
+        } catch (err) {
+          console.error("Start call failed:", err);
+          statusEl.textContent = "Start call failed!";
         }
-
-        // Init Retell client
-        const client = new RetellWebClient();
-
-        client.on("call_started", () => {
-          statusEl.textContent = "Call started!";
-        });
-
-        client.on("call_ended", () => {
-          statusEl.textContent = "Call ended!";
-        });
-
-        client.on("error", (err) => {
-          console.error(err);
-          statusEl.textContent = "Error: " + err.message;
-        });
-
-        await client.startCall({
-          accessToken: data.access_token,
-          sampleRate: 24000
-        });
-
-        statusEl.textContent = "Connecting...";
-      } catch (err) {
-        console.error("Start call failed:", err);
-        statusEl.textContent = "Start call failed!";
-      }
+      });
     });
   </script>
 </body>
