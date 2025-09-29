@@ -1,17 +1,13 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Retell Web Call</title>
+  <meta charset="UTF-8">
+  <title>Retell Call</title>
 
-  <!-- EventEmitter Polyfill -->
-  <script src="https://cdn.jsdelivr.net/npm/eventemitter3@5.0.1/index.min.js"></script>
-  <script>
-    window.EventEmitter = window.EventEmitter || window.EventEmitter3 || window.eventemitter3;
-  </script>
+  <!-- Polyfill EventEmitter first -->
+  <script src="https://cdn.jsdelivr.net/npm/events@3.3.0/events.min.js"></script>
 
-  <!-- Retell SDK -->
+  <!-- Then Retell SDK -->
   <script src="https://cdn.jsdelivr.net/npm/retell-client-js-sdk@latest/dist/index.umd.js"></script>
 </head>
 <body>
@@ -26,7 +22,7 @@
       statusEl.textContent = "Requesting token...";
 
       try {
-        // Call Make.com webhook for token
+        // Get token + call_id from Make
         const res = await fetch("https://hook.eu2.make.com/1dy0qj9pyop9walnqq7jl25rutn6jd3l", { method: "POST" });
         const data = await res.json();
 
@@ -35,7 +31,7 @@
           return;
         }
 
-        // Retell Client
+        // Init Retell client
         const client = new RetellWebClient();
 
         client.on("call_started", () => statusEl.textContent = "Call started!");
@@ -45,6 +41,7 @@
           statusEl.textContent = "Error: " + err.message;
         });
 
+        // Start call
         await client.startCall({
           accessToken: data.access_token,
           sampleRate: 24000
