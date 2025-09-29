@@ -1,20 +1,17 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Retell Call</title>
-
-  <!-- Polyfill EventEmitter first -->
-  <script src="https://cdn.jsdelivr.net/npm/events@3.3.0/events.min.js"></script>
-
-  <!-- Then Retell SDK -->
-  <script src="https://cdn.jsdelivr.net/npm/retell-client-js-sdk@latest/dist/index.umd.js"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Retell Web Call</title>
 </head>
 <body>
   <button id="start-call">🎤 Start AI Call</button>
   <p id="status">Ready</p>
 
-  <script>
+  <script type="module">
+    import { RetellWebClient } from "https://cdn.jsdelivr.net/npm/retell-client-js-sdk@latest/dist/index.js";
+
     const statusEl = document.getElementById("status");
     const btn = document.getElementById("start-call");
 
@@ -22,8 +19,10 @@
       statusEl.textContent = "Requesting token...";
 
       try {
-        // Get token + call_id from Make
-        const res = await fetch("https://hook.eu2.make.com/1dy0qj9pyop9walnqq7jl25rutn6jd3l", { method: "POST" });
+        // Call your Make webhook to get access_token
+        const res = await fetch("https://hook.eu2.make.com/1dy0qj9pyop9walnqq7jl25rutn6jd3l", {
+          method: "POST"
+        });
         const data = await res.json();
 
         if (!data.access_token) {
@@ -34,14 +33,19 @@
         // Init Retell client
         const client = new RetellWebClient();
 
-        client.on("call_started", () => statusEl.textContent = "Call started!");
-        client.on("call_ended", () => statusEl.textContent = "Call ended!");
+        client.on("call_started", () => {
+          statusEl.textContent = "Call started!";
+        });
+
+        client.on("call_ended", () => {
+          statusEl.textContent = "Call ended!";
+        });
+
         client.on("error", (err) => {
           console.error(err);
           statusEl.textContent = "Error: " + err.message;
         });
 
-        // Start call
         await client.startCall({
           accessToken: data.access_token,
           sampleRate: 24000
