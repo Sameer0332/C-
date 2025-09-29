@@ -1,0 +1,25 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>AI Voice</title>
+  <script src="https://cdn.jsdelivr.net/npm/retell-client-js-sdk@latest/dist/index.umd.js" defer></script>
+</head>
+<body>
+  <button id="mic">🎙️ Start</button>
+  <script>
+    const WEBHOOK_URL = "https://hook.eu2.make.com/1dy0qj9pyop9walnqq7jl25rutn6jd3l";
+    document.getElementById("mic").addEventListener("click", async () => {
+      try {
+        await navigator.mediaDevices.getUserMedia({ audio: true });
+        const r = await fetch(WEBHOOK_URL, { method: "POST" });
+        const { access_token } = await r.json();
+        const client = new RetellWebClient();
+        client.on("error", e => alert("Retell error: " + (e?.message || e)));
+        await client.startCall({ accessToken: access_token });
+      } catch (e) { alert("Start error: " + (e?.message || e)); console.error(e); }
+    });
+  </script>
+</body>
+</html>
